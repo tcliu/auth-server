@@ -61,7 +61,7 @@ describe('auth-config script helpers', () => {
     const { createAuthConfig } = await import('../../scripts/auth-config.mjs');
     const config = createAuthConfig({
       DATABASE_URL: 'postgres://db',
-      BETTER_AUTH_URL: 'https://auth.example.com',
+      APP_BASE_URL: 'https://auth.example.com',
       BETTER_AUTH_SECRET: 'secret',
       OAUTH_PM_CLIENT_SECRET: '',
       OAUTH_PM_POST_LOGOUT_REDIRECT_URIS: 'myapp://logout',
@@ -104,7 +104,7 @@ describe('auth-config script helpers', () => {
   it('requires DATABASE_URL before creating the auth config', async () => {
     const { createAuthConfig } = await import('../../scripts/auth-config.mjs');
 
-    expect(() => createAuthConfig({ BETTER_AUTH_URL: 'https://auth.example.com' })).toThrow(
+    expect(() => createAuthConfig({ APP_BASE_URL: 'https://auth.example.com' })).toThrow(
       'Missing DATABASE_URL for auth schema generation/migration'
     );
     expect(mocks.Pool).not.toHaveBeenCalled();

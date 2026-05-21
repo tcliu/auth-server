@@ -31,7 +31,7 @@ describe('getDbPool', () => {
 
   it('creates the pool with the auth schema search path and caches it', async () => {
     Object.assign(mockedEnv(), {
-      BETTER_AUTH_URL: 'https://auth.example.com',
+      APP_BASE_URL: 'https://auth.example.com',
       BETTER_AUTH_SECRET: 'secret',
       DATABASE_URL: 'postgres://db'
     });
@@ -52,7 +52,7 @@ describe('getDbPool', () => {
 
   it('throws when required auth environment is missing', async () => {
     Object.assign(mockedEnv(), {
-      BETTER_AUTH_URL: 'https://auth.example.com'
+      APP_BASE_URL: 'https://auth.example.com'
     });
 
     const { getDbPool } = await import('../../src/lib/server/db');

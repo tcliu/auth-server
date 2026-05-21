@@ -305,7 +305,7 @@ Recommended environment variables:
 ```bash
 DATABASE_URL=postgres://...
 BETTER_AUTH_SECRET=...
-BETTER_AUTH_URL=https://auth.example.com
+APP_BASE_URL=https://auth.example.com
 AUTH_TRUSTED_ORIGINS=https://app.example.com,http://localhost:5173,capacitor://localhost,ionic://localhost
 JWT_AUDIENCE=https://auth.example.com
 MAIL_FROM=no-reply@example.com

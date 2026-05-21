@@ -12,7 +12,7 @@ function splitCsv(value: string) {
 }
 
 export function getAuthEnv() {
-  const baseURL = trim(env.BETTER_AUTH_URL);
+  const baseURL = trim(env.APP_BASE_URL);
   const secret = trim(env.BETTER_AUTH_SECRET || env.AUTH_SECRET);
   const trustedOrigins = splitCsv(trim(env.AUTH_TRUSTED_ORIGINS));
   const databaseURL = trim(env.DATABASE_URL);
@@ -65,7 +65,7 @@ export function getAuthEnvStatus() {
 export function assertRequiredAuthEnv() {
   const authEnv = getAuthEnv();
   const missing = [
-    !authEnv.baseURL ? 'BETTER_AUTH_URL' : null,
+    !authEnv.baseURL ? 'APP_BASE_URL' : null,
     !authEnv.secret ? 'BETTER_AUTH_SECRET' : null,
     !authEnv.databaseURL ? 'DATABASE_URL' : null
   ].filter((value): value is string => !!value);

@@ -20,7 +20,7 @@ describe('auth env helpers', () => {
   it('parses configured auth environment values', () => {
     Object.assign(mockedPrivateEnv.env, {
       AUTH_APP_NAME: '  Portfolio Auth  ',
-      BETTER_AUTH_URL: ' https://auth.example.com ',
+      APP_BASE_URL: ' https://auth.example.com ',
       AUTH_SECRET: ' fallback-secret ',
       AUTH_TRUSTED_ORIGINS: ' https://app.example.com, https://admin.example.com ',
       DATABASE_URL: ' postgres://db ',
@@ -67,7 +67,7 @@ describe('auth env helpers', () => {
 
   it('reports configuration status using defaults where applicable', () => {
     Object.assign(mockedPrivateEnv.env, {
-      BETTER_AUTH_URL: 'https://auth.example.com',
+      APP_BASE_URL: 'https://auth.example.com',
       BETTER_AUTH_SECRET: 'primary-secret',
       DATABASE_URL: 'postgres://db',
       SMTP_HOST: 'smtp.example.com',
@@ -90,7 +90,7 @@ describe('auth env helpers', () => {
 
   it('throws when required auth environment values are missing', () => {
     Object.assign(mockedPrivateEnv.env, {
-      BETTER_AUTH_URL: 'https://auth.example.com'
+      APP_BASE_URL: 'https://auth.example.com'
     });
 
     expect(() => assertRequiredAuthEnv()).toThrow(

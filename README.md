@@ -72,6 +72,8 @@ Useful commands:
 
 `npm run env:sync:vercel` merges `.env` defaults with `.env.vercel` overrides, syncs the resulting set to Vercel production env vars, and removes production env vars that are no longer present in those files.
 
+Set `APP_BASE_URL` in `.env` and override it in `.env.vercel` when a Vercel deployment should manage a different production alias. `bash scripts/deploy.sh vercel` reads that URL, ensures the matching project domain exists, and removes the previously managed alias when the configured hostname changes.
+
 `npm run auth:build:neon` applies the committed `sql/schema.sql` directly to the configured Neon/Postgres database.
 
 Typical schema workflow:

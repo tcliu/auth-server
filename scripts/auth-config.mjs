@@ -129,7 +129,7 @@ function loadScriptEnv(env) {
 
 export function createAuthConfig(env = process.env) {
   const loadedEnv = loadScriptEnv(env);
-  const baseURL = (loadedEnv.BETTER_AUTH_URL || '').trim() || 'http://localhost:3001';
+  const baseURL = (loadedEnv.APP_BASE_URL || '').trim() || 'http://localhost:3001';
   const oauthAudience = (loadedEnv.OAUTH_PM_AUDIENCE || '').trim() || 'https://codepg-portfolio-manager.vercel.app';
   const oauthClientId = (loadedEnv.OAUTH_PM_CLIENT_ID || '').trim() || 'portfolio-manager';
   const oauthClientSecret = (loadedEnv.OAUTH_PM_CLIENT_SECRET || '').trim();

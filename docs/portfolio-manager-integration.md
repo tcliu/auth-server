@@ -375,7 +375,7 @@ tests/vitest/auth-check.vitest.ts          update config probe tests
 ### `auth-server`
 
 ```bash
-BETTER_AUTH_URL=http://localhost:3001
+APP_BASE_URL=http://localhost:3001
 BETTER_AUTH_SECRET=dev-secret
 DATABASE_URL=postgres://...
 AUTH_TRUSTED_ORIGINS=http://localhost:5173,capacitor://localhost,ionic://localhost
