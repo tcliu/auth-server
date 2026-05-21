@@ -9,6 +9,7 @@ export function getDbPool() {
   const authEnv = assertRequiredAuthEnv();
   pool = new Pool({
     connectionString: authEnv.databaseURL,
+    options: '-c search_path=auth',
     max: 10
   });
   return pool;

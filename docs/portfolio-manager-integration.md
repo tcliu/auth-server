@@ -41,11 +41,12 @@ These seams should be preserved.
 
 Use this strategy:
 
-1. `portfolio-manager` browser UI authenticates against `auth-server`.
-2. The client retrieves a Better Auth JWT for API use.
-3. `portfolio-manager` sends that JWT as `Authorization: Bearer <token>` to its own API.
-4. `portfolio-manager` validates the JWT against `auth-server` JWKS.
-5. `portfolio-manager` maps claims into its existing `AuthenticatedUser` shape.
+1. `portfolio-manager` acts as an OAuth client against `auth-server`.
+2. Users authenticate through Authorization Code + PKCE.
+3. `portfolio-manager` exchanges the code for tokens.
+4. `portfolio-manager` sends the access token as `Authorization: Bearer <token>` to its own API.
+5. `portfolio-manager` validates the JWT against `auth-server` JWKS.
+6. `portfolio-manager` maps claims into its existing `AuthenticatedUser` shape.
 
 This keeps `portfolio-manager` independent from Better Auth session storage internals.
 
@@ -54,7 +55,8 @@ This keeps `portfolio-manager` independent from Better Auth session storage inte
 Before integrating, `auth-server` should provide:
 
 - public auth origin, for example `https://auth.example.com`
-- Better Auth client-compatible routes under `/api/auth`
+- OAuth 2.1 / OIDC provider routes under `/api/auth/oauth2/*`
+- discovery endpoints under `/.well-known/*`
 - JWT plugin enabled
 - JWKS endpoint available
 - a stable JWT payload including:
@@ -78,7 +80,10 @@ AUTH_PROVIDER=better-auth
 AUTH_SERVER_URL=http://localhost:3001
 AUTH_JWKS_URL=http://localhost:3001/api/auth/jwks
 AUTH_JWT_ISSUER=http://localhost:3001
-AUTH_JWT_AUDIENCE=http://localhost:3001
+AUTH_JWT_AUDIENCE=https://codepg-portfolio-manager.vercel.app
+AUTH_OAUTH_CLIENT_ID=portfolio-manager
+AUTH_OAUTH_REDIRECT_URI=http://localhost:5173/auth/callback
+AUTH_OAUTH_SCOPES=openid profile email offline_access read:portfolio write:portfolio
 VITE_AUTH_SERVER_URL=http://localhost:3001
 VITE_AUTH_SIGN_IN_URL=http://localhost:3001/auth/sign-in
 VITE_AUTH_SIGN_UP_URL=http://localhost:3001/auth/sign-up

@@ -7,7 +7,8 @@ Create a standalone `auth-server` that:
 - runs on Vercel
 - uses Better Auth as the core auth framework
 - stores users, sessions, accounts, verification data, and JWKS material in Postgres
-- issues JWTs for downstream services such as `portfolio-manager`
+- acts as a real OAuth 2.1 / OIDC provider for downstream services such as `portfolio-manager`
+- issues JWTs for downstream resource servers
 - exposes enough customization points to support future apps, roles, metadata, and provider changes
 
 ## Recommended Architecture
@@ -28,8 +29,9 @@ Recommendation:
 
 - Better Auth manages primary user/session state
 - Better Auth session cookie remains the source of truth for browser session continuity
-- Better Auth JWT plugin issues short-lived JWTs for downstream APIs
-- downstream apps validate JWTs against the auth server JWKS endpoint
+- Better Auth OAuth Provider plugin exposes standards-based authorization, token, consent, and userinfo flows
+- Better Auth JWT plugin issues signed JWTs and publishes JWKS for verification
+- downstream apps authenticate with Authorization Code + PKCE and validate JWTs against the auth server JWKS endpoint
 
 Why this model:
 
@@ -100,6 +102,7 @@ Start with:
 - email/password
 - username plugin
 - JWT plugin
+- OAuth Provider plugin
 
 Add later only if needed:
 
@@ -156,7 +159,6 @@ Recommended initial additional fields:
 - user:
   - `displayName` only if different from Better Auth `name`
   - `avatarUrl` if needed later
-  - `defaultApp` if multi-app routing becomes useful
 - session:
   - avoid custom fields at first unless there is a concrete use case
 
