@@ -38,6 +38,113 @@ project_id() {
   node -e "const fs=require('fs'); const path=process.argv[1]; const data=JSON.parse(fs.readFileSync(path, 'utf8')); process.stdout.write(String(data.projectId || ''));" "${ROOT_DIR}/.vercel/project.json"
 }
 
+extract_deployment_url() {
+  local command_output="$1"
+
+  COMMAND_OUTPUT="${command_output}" node <<'EOF'
+const raw = String(process.env.COMMAND_OUTPUT || '');
+
+function trimJsonPayload(value) {
+  const index = value.search(/[\[{]/);
+  return index === -1 ? '' : value.slice(index);
+}
+
+function normalizeUrl(value) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (/^[\w.-]+\.vercel\.app$/i.test(trimmed)) return `https://${trimmed}`;
+  return '';
+}
+
+const candidates = [];
+const pushCandidate = (value) => {
+  const normalized = normalizeUrl(value);
+  if (normalized && !candidates.includes(normalized)) {
+    candidates.push(normalized);
+  }
+};
+
+const jsonPayload = trimJsonPayload(raw);
+if (jsonPayload) {
+  try {
+    const parsed = JSON.parse(jsonPayload);
+    if (typeof parsed === 'string') {
+      pushCandidate(parsed);
+    } else if (parsed && typeof parsed === 'object') {
+      pushCandidate(parsed.url);
+      pushCandidate(parsed.inspectorUrl);
+      if (Array.isArray(parsed.alias)) parsed.alias.forEach(pushCandidate);
+      if (Array.isArray(parsed.aliases)) parsed.aliases.forEach(pushCandidate);
+    }
+  } catch {}
+}
+
+for (const match of raw.match(/https?:\/\/[^\s"']+/g) || []) {
+  pushCandidate(match);
+}
+for (const match of raw.match(/[\w.-]+\.vercel\.app/g) || []) {
+  pushCandidate(match);
+}
+
+if (candidates.length > 0) {
+  process.stdout.write(candidates[0]);
+}
+EOF
+}
+
+deployment_ready_state() {
+  local inspect_output="$1"
+
+  INSPECT_OUTPUT="${inspect_output}" node <<'EOF'
+const raw = String(process.env.INSPECT_OUTPUT || '');
+const index = raw.search(/[\[{]/);
+
+if (index === -1) {
+  process.exit(0);
+}
+
+try {
+  const parsed = JSON.parse(raw.slice(index));
+  process.stdout.write(String(parsed?.readyState || '').trim());
+} catch {}
+EOF
+}
+
+wait_for_ready_deployment() {
+  local deployment_url="$1"
+  local inspect_output
+  local inspect_status
+  local ready_state
+
+  echo "-> Waiting for Vercel deployment to become ready..."
+  set +e
+  inspect_output="$(run_vercel_cli inspect "${deployment_url}" --wait --timeout 5m --format json 2>&1)"
+  inspect_status=$?
+  set -e
+
+  ready_state="$(deployment_ready_state "${inspect_output}")"
+  if [[ "${ready_state}" == "READY" ]]; then
+    return 0
+  fi
+
+  if [[ -n "${ready_state}" ]]; then
+    echo "Vercel deployment did not reach READY (state: ${ready_state}) -> ${deployment_url}" >&2
+  else
+    echo "Vercel deployment did not reach READY -> ${deployment_url}" >&2
+  fi
+
+  if [[ -n "${inspect_output}" ]]; then
+    printf '%s\n' "${inspect_output}" >&2
+  fi
+
+  if [[ ${inspect_status} -ne 0 ]]; then
+    exit ${inspect_status}
+  fi
+
+  exit 1
+}
+
 configured_base_url() {
   if [[ -n "${APP_BASE_URL:-}" ]]; then
     printf '%s' "${APP_BASE_URL}"
@@ -226,6 +333,8 @@ sync_project_domains() {
 deploy_vercel() {
   local app_version
   local base_url
+  local deploy_output
+  local deployment_url
   app_version="$(git -C "${ROOT_DIR}" rev-parse HEAD 2>/dev/null || printf 'unknown')"
   base_url="$(configured_base_url)"
 
@@ -235,10 +344,19 @@ deploy_vercel() {
   fi
 
   echo '-> Deploying to Vercel...'
-  (
+  deploy_output="$(
     cd "${ROOT_DIR}"
-    APP_VERSION="${app_version}" run_vercel_cli deploy --prod --yes
-  )
+    APP_VERSION="${app_version}" run_vercel_cli deploy --prod --yes --no-wait --format json
+  )"
+
+  deployment_url="$(extract_deployment_url "${deploy_output}")"
+  if [[ -z "${deployment_url}" ]]; then
+    echo 'Failed to determine the Vercel deployment URL.' >&2
+    printf '%s\n' "${deploy_output}" >&2
+    exit 1
+  fi
+
+  wait_for_ready_deployment "${deployment_url}"
 
   sync_project_domains
 
